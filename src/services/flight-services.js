@@ -30,8 +30,9 @@ async function createFlight(data){
 
 async function getAllFlights(query) {
     let customFilter = {};
+    let sortFilter = [];
 
-
+    const tripEndTime = "23:59:59.999";
     if (query.trips) {
         const [departureAirportId, arrivalAirportId] = query.trips.split("-");
 
@@ -54,15 +55,35 @@ async function getAllFlights(query) {
     }
 
     if(query.price){
-        [minPrice,maxPrice] = query.price.split("-");
+       const [minPrice,maxPrice] = query.price.split("-");
 
         customFilter.price = {
             [Op.between] : [minPrice,(maxPrice == undefined ? 2000 : maxPrice)]
         }
     }
 
+    if(query.travellers){
+        customFilter.totalSeats = {
+            [Op.gte] : query.travellers
+        }
+    }
+
+    if (query.tripDate) {
+    const startDate = new Date(`${query.tripDate}T00:00:00.000Z`);
+    const endDate = new Date(`${query.tripDate}T${tripEndTime}Z`);
+
+    customFilter.departureTime = {
+        [Op.between]: [startDate, endDate]
+    };
+    }
+    if(query.sort){
+        let sortQuery = query.sort.split(","); //[ 'departureTime_ASC' ]
+        let sortArray = sortQuery.map(col => col.split("_"))
+        sortFilter = sortArray;
+    }    
+
     try {
-        const response = await flightRepository.getAllFlights(customFilter);
+        const response = await flightRepository.getAllFlights(customFilter,sortFilter);
         return response;
     } catch (error) {
     
