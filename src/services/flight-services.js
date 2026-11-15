@@ -3,6 +3,7 @@ const AppError = require('../utils/errors/app-error')
 const {StatusCodes} = require('http-status-codes')
 const flightRepository = new FlightRepository();
 const {compareTime} = require('../utils/helper/helper')
+const {Op} = require('sequelize')
 
 async function createFlight(data){
     try {
@@ -50,6 +51,14 @@ async function getAllFlights(query) {
 
         customFilter.departureAirportId = departureAirportId;
         customFilter.arrivalAirportId = arrivalAirportId;
+    }
+
+    if(query.price){
+        [minPrice,maxPrice] = query.price.split("-");
+
+        customFilter.price = {
+            [Op.between] : [minPrice,(maxPrice == undefined ? 2000 : maxPrice)]
+        }
     }
 
     try {
