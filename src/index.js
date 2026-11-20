@@ -1,12 +1,13 @@
 
 const express = require('express')
 const {serverConfig,logger} = require("./config")
+const limiter = require("../src/utils/ratelimiter")
 
 const app = express()
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 const apiRouter = require("./routes")
-
+app.use(limiter)
 app.use ('/api',apiRouter)
 
 app.listen(serverConfig.PORT,()=> {
